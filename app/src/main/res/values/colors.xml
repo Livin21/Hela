@@ -5,4 +5,5 @@
     <color name="colorAccent">#FF4081</color>
     <color name="bot_chat_dialog_background_color">#1a237e</color>
     <color name="user_chat_dialog_background_color">#ffffff</color>
+    <color name="mainBackgroundColor">#FFCCBC</color>
 </resources>
