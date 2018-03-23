@@ -1,7 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
-<TextView
+<RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/chatDialogUser"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@drawable/chat_dialog_user_background"/>
+    android:layout_height="wrap_content"
+    android:gravity="end">
+
+
+    <TextView
+        android:id="@+id/chatDialogUser"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="8dp"
+        android:background="@drawable/chat_dialog_user_background"
+        android:gravity="center"
+        android:textSize="20sp"
+        android:text="Test"
+        android:textStyle="bold"
+        android:padding="10dp"
+        android:textColor="#212121"
+        />
+
+</RelativeLayout>
