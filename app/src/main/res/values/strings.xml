@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">Hela</string>
     <string name="talk_to_hela">Talk to Hela</string>
+    <string name="action">action</string>
 </resources>

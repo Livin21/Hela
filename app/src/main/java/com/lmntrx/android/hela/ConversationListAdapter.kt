@@ -58,18 +58,12 @@ class ConversationListAdapter(private val conversationList: ArrayList<ChatBubble
 
 
     class UserBubbleViewHolder(userChatBubbleView: View) : RecyclerView.ViewHolder(userChatBubbleView) {
-        lateinit var chatTextView: TextView
-        init {
-            userChatBubbleView.findViewById<TextView>(R.id.chatDialogUser)
-        }
+        val chatTextView: TextView = userChatBubbleView.findViewById(R.id.chatDialogUser)
     }
 
 
     class BotBubbleViewHolder(botChatBubbleView: View) : RecyclerView.ViewHolder(botChatBubbleView) {
-        lateinit var chatTextView: TextView
-        init {
-            botChatBubbleView.findViewById<TextView>(R.id.chatDialogBot)
-        }
+        val chatTextView: TextView = botChatBubbleView.findViewById(R.id.chatDialogBot)
     }
 
 }
