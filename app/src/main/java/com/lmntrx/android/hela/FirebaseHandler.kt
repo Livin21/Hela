@@ -16,11 +16,9 @@ interface OnLoadCompleteListener {
 class FirebaseHandler {
 
     fun saveChat(conversationList: MutableList<ChatBubble>) {
-        conversationList.forEach {
-            FirebaseFirestore.getInstance().collection("conversations").document(
-                    FirebaseAuth.getInstance().currentUser!!.uid
-            ).collection("conversation").add(it)
-        }
+        FirebaseFirestore.getInstance().collection("conversations").document(
+                FirebaseAuth.getInstance().currentUser!!.uid
+        ).collection("conversation").add(conversationList.last())
     }
 
     fun getConversationList(onLoadCompleteListener: OnLoadCompleteListener) {

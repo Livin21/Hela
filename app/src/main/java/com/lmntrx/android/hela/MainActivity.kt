@@ -15,6 +15,7 @@ import android.support.annotation.DrawableRes
 import android.support.v4.content.ContextCompat
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
+import android.test.TouchUtils.scrollToBottom
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
@@ -32,6 +33,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import kotlinx.android.synthetic.main.activity_main.*
 import org.jetbrains.anko.doAsync
+import org.jetbrains.anko.toast
 import org.jetbrains.anko.uiThread
 
 
@@ -55,12 +57,14 @@ class MainActivity : AppCompatActivity(), AIListener {
 
     override fun onResult(result: AIResponse?) {
         conversationList.add(UserBubble(result?.result?.resolvedQuery!!))
+        FirebaseHandler().saveChat(conversationList)
         val botResponse = result.result.fulfillment.speech
         if (!botResponse.isNullOrEmpty())
             conversationList.add(BotBubble(botResponse))
         else
             conversationList.add(BotBubble("Sorry. I am not programmed for that. :("))
         conversationListRecyclerView.swapAdapter(ConversationListAdapter(conversationList), true)
+        scrollToBottom()
 
         mode = idleMode
 
@@ -68,23 +72,21 @@ class MainActivity : AppCompatActivity(), AIListener {
     }
 
     override fun onListeningStarted() {
-
+        toast("Say something!")
     }
 
-    override fun onAudioLevel(level: Float) {
-
-    }
+    override fun onAudioLevel(level: Float) {}
 
     override fun onError(error: AIError?) {
-
+        toast("Something happened! ${error?.message}")
     }
 
     override fun onListeningCanceled() {
-
+        toast("Listener cancelled")
     }
 
     override fun onListeningFinished() {
-
+        toast("Time Up")
     }
 
     @SuppressLint("RestrictedApi")
@@ -157,9 +159,16 @@ class MainActivity : AppCompatActivity(), AIListener {
 
         FirebaseHandler().getConversationList(object : OnLoadCompleteListener {
             override fun onComplete(conversationList: List<ChatBubble>) {
+                this@MainActivity.conversationList = conversationList.toMutableList()
                 conversationListRecyclerView.swapAdapter(ConversationListAdapter(conversationList), true)
+                scrollToBottom()
             }
         })
+    }
+
+    private fun scrollToBottom() {
+        if (conversationList.isNotEmpty())
+            conversationListRecyclerView.scrollToPosition(conversationList.size - 1)
     }
 
     private fun startMic() {
@@ -171,6 +180,8 @@ class MainActivity : AppCompatActivity(), AIListener {
         conversationListRecyclerView.swapAdapter(ConversationListAdapter(conversationList), true)
         chatBox.setText("")
         mode = idleMode
+        scrollToBottom()
+        FirebaseHandler().saveChat(conversationList)
 
         aiRequest?.setQuery(message)
         doAsync {
@@ -182,10 +193,11 @@ class MainActivity : AppCompatActivity(), AIListener {
                 else
                     conversationList.add(BotBubble("Sorry. I am not programmed for that. :("))
                 conversationListRecyclerView.swapAdapter(ConversationListAdapter(conversationList), true)
+                scrollToBottom()
+                FirebaseHandler().saveChat(conversationList)
             }
         }
 
-        FirebaseHandler().saveChat(conversationList)
 
 
     }
