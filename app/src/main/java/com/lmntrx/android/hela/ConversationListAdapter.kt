@@ -1,12 +1,11 @@
 package com.lmntrx.android.hela
 
 import android.support.v7.widget.RecyclerView
-import android.view.ViewGroup
-import java.util.*
 import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import android.widget.TextView
-import org.w3c.dom.Text
+import java.util.*
 
 
 /***
@@ -17,6 +16,7 @@ class ConversationListAdapter(private val conversationList: ArrayList<ChatBubble
 
     private val user = 0
     private val bot = 1
+    private val invalid = -1
 
     override fun onCreateViewHolder(parent: ViewGroup?, viewType: Int): RecyclerView.ViewHolder {
 
@@ -52,8 +52,9 @@ class ConversationListAdapter(private val conversationList: ArrayList<ChatBubble
         }
     }
 
+
     override fun getItemViewType(position: Int): Int {
-        return if (conversationList[position] is UserBubble) user else bot
+        return if (conversationList[position] is UserBubble) user else if(conversationList[position] is BotBubble) bot else invalid
     }
 
 
