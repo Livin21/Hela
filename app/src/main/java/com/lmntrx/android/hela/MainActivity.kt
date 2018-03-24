@@ -36,6 +36,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        // Typing listener on chat box
         chatBox.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(p0: Editable?) {}
 
