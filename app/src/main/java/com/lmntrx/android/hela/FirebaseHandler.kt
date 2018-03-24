@@ -1,8 +1,8 @@
 package com.lmntrx.android.hela
 
-import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import java.util.*
 
 
 /***
@@ -34,6 +34,7 @@ class FirebaseHandler{
                             if (it["type"].toString() == "0") UserBubble(it["message"] as String) else BotBubble(it["message"] as String)
                     )
                 }
+                conversationList.reverse()
                 onLoadCompleteListener.onComplete(conversationList)
             }
         }
