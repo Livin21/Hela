@@ -108,9 +108,9 @@ class MainActivity : AppCompatActivity(), AIListener {
 
         // Click listener on send/mic button
         actionButton.setOnClickListener {
-            if (mode == typingMode){
+            if (mode == typingMode) {
                 sendMessage(chatBox.text.toString())
-            }else{
+            } else {
                 startMic()
             }
         }
@@ -122,11 +122,13 @@ class MainActivity : AppCompatActivity(), AIListener {
             override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {}
 
             override fun onTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
-                mode = typingMode
-                if (!p0.isNullOrEmpty()){
-                    imageViewAnimatedChange(this@MainActivity, actionButton, R.drawable.ic_action_send)
-                }else{
+                mode = if (!p0.isNullOrEmpty()) {
+                    if (mode != typingMode)
+                        imageViewAnimatedChange(this@MainActivity, actionButton, R.drawable.ic_action_send)
+                    typingMode
+                } else {
                     imageViewAnimatedChange(this@MainActivity, actionButton, R.drawable.ic_action_mic)
+                    idleMode
                 }
             }
         })
@@ -186,7 +188,6 @@ class MainActivity : AppCompatActivity(), AIListener {
         FirebaseHandler().saveChat(conversationList)
 
 
-
     }
 
     @SuppressLint("RestrictedApi")
@@ -218,7 +219,7 @@ class MainActivity : AppCompatActivity(), AIListener {
             // Please refer to the GoogleSignInStatusCodes class reference for more information.
             Log.w(MainActivity::class.java.simpleName, "signInResult:failed code=" + e.statusCode)
 
-            Toast.makeText(this, "Login Failed",Toast.LENGTH_LONG).show()
+            Toast.makeText(this, "Login Failed", Toast.LENGTH_LONG).show()
         }
 
     }
@@ -232,18 +233,18 @@ class MainActivity : AppCompatActivity(), AIListener {
                     if (task.isSuccessful) {
                         // Sign in success, update UI with the signed-in user's information
                         Log.d(MainActivity::class.java.simpleName, "signInWithCredential:success")
-                        Toast.makeText(this, "Login Success",Toast.LENGTH_LONG).show()
+                        Toast.makeText(this, "Login Success", Toast.LENGTH_LONG).show()
                     } else {
                         // If sign in fails, display a message to the user.
                         Log.w(MainActivity::class.java.simpleName, "signInWithCredential:failure", task.exception)
 
-                        Toast.makeText(this, "Login Failed",Toast.LENGTH_LONG).show()
+                        Toast.makeText(this, "Login Failed", Toast.LENGTH_LONG).show()
                     }
                 }
     }
 
     // Action Button animation
-    private fun imageViewAnimatedChange(context: Context, imageView: ImageView, @DrawableRes newImageId: Int){
+    private fun imageViewAnimatedChange(context: Context, imageView: ImageView, @DrawableRes newImageId: Int) {
         val newImage = ContextCompat.getDrawable(context, newImageId)
         val animOut = AnimationUtils.loadAnimation(context, R.anim.zoom_out)
         val animIn = AnimationUtils.loadAnimation(context, R.anim.zoom_in)
@@ -253,6 +254,7 @@ class MainActivity : AppCompatActivity(), AIListener {
                 imageView.setImageDrawable(newImage)
                 imageView.startAnimation(animIn)
             }
+
             override fun onAnimationStart(p0: Animation?) {}
         })
         imageView.startAnimation(animOut)
