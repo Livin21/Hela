@@ -6,7 +6,6 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="10dp"
-    android:background="@color/mainBackgroundColor"
     tools:context="com.lmntrx.android.hela.MainActivity">
 
   <android.support.v7.widget.RecyclerView
@@ -21,9 +20,9 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:padding="5dp"
-        android:layout_margin="2dp"
+        android:layout_margin="8dp"
         android:layout_alignParentBottom="true"
-        app:cardElevation="5dp">
+        app:cardElevation="4dp">
       <RelativeLayout
           android:layout_width="match_parent"
           android:layout_height="wrap_content"
@@ -41,8 +40,10 @@
               android:id="@+id/chatBox"
               android:layout_width="match_parent"
               android:layout_height="wrap_content"
-              android:maxLines="3"
+              android:maxLines="4"
               android:hint="@string/talk_to_hela"
+              android:layout_marginLeft="3dp"
+              android:layout_marginStart="3dp"
               android:layout_toLeftOf="@id/actionButton"
               android:layout_toStartOf="@id/actionButton"
               android:textSize="15sp"/>
