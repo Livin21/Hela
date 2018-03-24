@@ -1,15 +1,31 @@
 package com.lmntrx.android.hela
 
+import ai.api.AIListener
+import ai.api.android.AIConfiguration
+import ai.api.android.AIDataService
+import ai.api.android.AIService
+import ai.api.model.AIError
+import ai.api.model.AIRequest
+import ai.api.model.AIResponse
+import ai.api.model.Result
+
 import android.annotation.SuppressLint
+import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.drawable.Drawable
 import android.os.Bundle
-import android.support.v4.app.FragmentActivity
+import android.support.annotation.DrawableRes
 import android.support.v4.content.ContextCompat
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
+import android.view.animation.Animation
+import android.view.animation.AnimationUtils
+import android.widget.ImageView
+import android.widget.Toast
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
@@ -19,17 +35,11 @@ import com.google.android.gms.tasks.Task
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import kotlinx.android.synthetic.main.activity_main.*
-import com.google.firebase.auth.FirebaseUser
-import com.google.firebase.auth.AuthResult
-import android.support.annotation.NonNull
-import android.widget.Toast
-import com.google.android.gms.tasks.OnCompleteListener
-import com.google.firebase.auth.AuthCredential
+import org.jetbrains.anko.doAsync
+import org.jetbrains.anko.uiThread
 
 
-
-
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), AIListener {
 
     private lateinit var conversationList: ArrayList<ChatBubble>
 
@@ -43,11 +53,44 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var mAuth: FirebaseAuth
 
+    private var aiService: AIService? = null
+    private var aiDataService: AIDataService? = null
+    private var aiRequest: AIRequest? = null
+
+    override fun onResult(result: AIResponse?) {
+        conversationList.add(UserBubble(result?.result?.resolvedQuery!!))
+        conversationList.add(BotBubble(result.result.fulfillment.speech))
+        conversationListRecyclerView.swapAdapter(ConversationListAdapter(conversationList), true)
+
+        mode = idleMode
+
+        FirebaseHandler().saveChat(conversationList)
+    }
+
+    override fun onListeningStarted() {
+
+    }
+
+    override fun onAudioLevel(level: Float) {
+
+    }
+
+    override fun onError(error: AIError?) {
+
+    }
+
+    override fun onListeningCanceled() {
+
+    }
+
+    override fun onListeningFinished() {
+
+    }
+
     @SuppressLint("RestrictedApi")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
 
         mAuth = FirebaseAuth.getInstance()
 
@@ -81,12 +124,26 @@ class MainActivity : AppCompatActivity() {
             override fun onTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
                 mode = typingMode
                 if (!p0.isNullOrEmpty()){
-                    actionButton.setImageDrawable(ContextCompat.getDrawable(this@MainActivity, R.drawable.ic_action_send))
+                    imageViewAnimatedChange(this@MainActivity, actionButton, R.drawable.ic_action_send)
                 }else{
-                    actionButton.setImageDrawable(ContextCompat.getDrawable(this@MainActivity, R.drawable.ic_action_mic))
+                    imageViewAnimatedChange(this@MainActivity, actionButton, R.drawable.ic_action_mic)
                 }
             }
         })
+
+
+        // API.ai setup
+        val config = AIConfiguration(
+                "bbdbf6a9df0a463a9f604821bb5f5ff1",
+                ai.api.AIConfiguration.SupportedLanguages.English,
+                AIConfiguration.RecognitionEngine.System
+        )
+
+        aiService = AIService.getService(this, config);
+        aiService?.setListener(this)
+
+        aiDataService = AIDataService(this, config)
+        aiRequest = AIRequest()
 
 
     }
@@ -104,16 +161,28 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun startMic() {
-
-
+        aiService?.startListening()
     }
 
     private fun sendMessage(message: String) {
-        conversationList.add(UserBubble(message))
+        conversationList.add(UserBubble(message.trim()))
         conversationListRecyclerView.swapAdapter(ConversationListAdapter(conversationList), true)
         chatBox.setText("")
         mode = idleMode
+
+        aiRequest?.setQuery(message)
+        doAsync {
+            val response = aiDataService?.request(aiRequest)
+            uiThread {
+                conversationList.add(BotBubble(response!!.result.fulfillment.speech))
+                conversationListRecyclerView.swapAdapter(ConversationListAdapter(conversationList), true)
+            }
+        }
+
         FirebaseHandler().saveChat(conversationList)
+
+
+
     }
 
     @SuppressLint("RestrictedApi")
@@ -168,4 +237,21 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
     }
+
+    // Action Button animation
+    private fun imageViewAnimatedChange(context: Context, imageView: ImageView, @DrawableRes newImageId: Int){
+        val newImage = ContextCompat.getDrawable(context, newImageId)
+        val animOut = AnimationUtils.loadAnimation(context, R.anim.zoom_out)
+        val animIn = AnimationUtils.loadAnimation(context, R.anim.zoom_in)
+        animOut.setAnimationListener(object : Animation.AnimationListener {
+            override fun onAnimationRepeat(p0: Animation?) {}
+            override fun onAnimationEnd(p0: Animation?) {
+                imageView.setImageDrawable(newImage)
+                imageView.startAnimation(animIn)
+            }
+            override fun onAnimationStart(p0: Animation?) {}
+        })
+        imageView.startAnimation(animOut)
+    }
+
 }
