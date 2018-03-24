@@ -3,6 +3,7 @@ package com.lmntrx.android.hela
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
+import android.support.v4.app.FragmentActivity
 import android.support.v4.content.ContextCompat
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
@@ -15,7 +16,18 @@ import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.tasks.Task
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.GoogleAuthProvider
 import kotlinx.android.synthetic.main.activity_main.*
+import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.auth.AuthResult
+import android.support.annotation.NonNull
+import android.widget.Toast
+import com.google.android.gms.tasks.OnCompleteListener
+import com.google.firebase.auth.AuthCredential
+
+
+
 
 class MainActivity : AppCompatActivity() {
 
@@ -26,14 +38,27 @@ class MainActivity : AppCompatActivity() {
     val typingMode = 1
     private val idleMode = 0
 
-    private var account: GoogleSignInAccount? = null
-    private lateinit var googleSignInClient: GoogleSignInClient
+    private lateinit var mGoogleSignInClient: GoogleSignInClient
 
+
+    private lateinit var mAuth: FirebaseAuth
+
+    @SuppressLint("RestrictedApi")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        login()
+
+        mAuth = FirebaseAuth.getInstance()
+
+        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestIdToken(getString(R.string.default_web_client_id))
+                .requestEmail()
+                .build()
+
+        mGoogleSignInClient = GoogleSignIn.getClient(this, gso)
+
+        signIn()
 
         // Setup RecyclerView
         setupRecyclerView()
@@ -70,6 +95,12 @@ class MainActivity : AppCompatActivity() {
         conversationList = ArrayList()
         conversationListRecyclerView.layoutManager = LinearLayoutManager(this)
         conversationListRecyclerView.adapter = ConversationListAdapter(conversationList)
+
+        FirebaseHandler().getConversationList(object : OnLoadCompleteListener {
+            override fun onComplete(conversationList: ArrayList<ChatBubble>) {
+                conversationListRecyclerView.swapAdapter(ConversationListAdapter(conversationList), true)
+            }
+        })
     }
 
     private fun startMic() {
@@ -82,24 +113,18 @@ class MainActivity : AppCompatActivity() {
         conversationListRecyclerView.swapAdapter(ConversationListAdapter(conversationList), true)
         chatBox.setText("")
         mode = idleMode
+        FirebaseHandler().saveChat(conversationList)
     }
 
     @SuppressLint("RestrictedApi")
-    fun login(){
-        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestEmail()
-                .build()
-        googleSignInClient = GoogleSignIn.getClient(this, gso)
-        val account = GoogleSignIn.getLastSignedInAccount(this)
-        if (account == null) {
-            val signInIntent = googleSignInClient.signInIntent
-            startActivityForResult(signInIntent, 0)
-        } else updateUser(account)
+    private fun signIn() {
+        val signInIntent = mGoogleSignInClient.signInIntent
+        startActivityForResult(signInIntent, 0)
     }
 
-
     @SuppressLint("RestrictedApi")
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent) {
+    public override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent) {
+        super.onActivityResult(requestCode, resultCode, data)
 
         // Result returned from launching the Intent from GoogleSignInClient.getSignInIntent(...);
         if (requestCode == 0) {
@@ -108,23 +133,39 @@ class MainActivity : AppCompatActivity() {
             val task = GoogleSignIn.getSignedInAccountFromIntent(data)
             handleSignInResult(task)
         }
-
     }
 
     private fun handleSignInResult(completedTask: Task<GoogleSignInAccount>) {
         try {
             val account = completedTask.getResult(ApiException::class.java)
-            updateUser(account)
-        } catch (e: ApiException) {
-            Log.e("Login Error","Login Failed\n${e.message}")
-        }
 
+            firebaseAuthWithGoogle(account)
+        } catch (e: ApiException) {
+            // The ApiException status code indicates the detailed failure reason.
+            // Please refer to the GoogleSignInStatusCodes class reference for more information.
+            Log.w(MainActivity::class.java.simpleName, "signInResult:failed code=" + e.statusCode)
+
+            Toast.makeText(this, "Login Failed",Toast.LENGTH_LONG).show()
+        }
 
     }
 
-    private fun updateUser(account: GoogleSignInAccount?) {
+    private fun firebaseAuthWithGoogle(acct: GoogleSignInAccount) {
+        Log.d(MainActivity::class.java.simpleName, "firebaseAuthWithGoogle:" + acct.id!!)
 
-        this.account = account
+        val credential = GoogleAuthProvider.getCredential(acct.idToken, null)
+        mAuth.signInWithCredential(credential)
+                .addOnCompleteListener(this) { task ->
+                    if (task.isSuccessful) {
+                        // Sign in success, update UI with the signed-in user's information
+                        Log.d(MainActivity::class.java.simpleName, "signInWithCredential:success")
+                        Toast.makeText(this, "Login Success",Toast.LENGTH_LONG).show()
+                    } else {
+                        // If sign in fails, display a message to the user.
+                        Log.w(MainActivity::class.java.simpleName, "signInWithCredential:failure", task.exception)
 
+                        Toast.makeText(this, "Login Failed",Toast.LENGTH_LONG).show()
+                    }
+                }
     }
 }

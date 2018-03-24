@@ -2,4 +2,6 @@
     <string name="app_name">Hela</string>
     <string name="talk_to_hela">Talk to Hela</string>
     <string name="action">action</string>
+
+    <string name="google_web_client_id">228963848630-s57u3i2uthg7ij6en1t467t9vabej39a.apps.googleusercontent.com</string>
 </resources>

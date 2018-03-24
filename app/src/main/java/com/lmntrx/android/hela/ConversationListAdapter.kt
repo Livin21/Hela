@@ -30,8 +30,8 @@ class ConversationListAdapter(private val conversationList: ArrayList<ChatBubble
                 UserBubbleViewHolder(userChatBubbleView)
             }
             else -> {
-                val userChatBubbleView = inflater.inflate(R.layout.chat_dialog_bot, parent, false)
-                BotBubbleViewHolder(userChatBubbleView)
+                val botChatBubbleView = inflater.inflate(R.layout.chat_dialog_bot, parent, false)
+                BotBubbleViewHolder(botChatBubbleView)
             }
         }
 
