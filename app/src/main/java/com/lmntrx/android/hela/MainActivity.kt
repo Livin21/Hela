@@ -155,14 +155,6 @@ class MainActivity : AppCompatActivity(), AIListener {
         conversationList = ArrayList()
         conversationListRecyclerView.layoutManager = LinearLayoutManager(this)
         conversationListRecyclerView.adapter = ConversationListAdapter(conversationList)
-
-        FirebaseHandler().getConversationList(object : OnLoadCompleteListener {
-            override fun onComplete(conversationList: List<ChatBubble>) {
-                this@MainActivity.conversationList = conversationList.toMutableList()
-                conversationListRecyclerView.swapAdapter(ConversationListAdapter(conversationList), true)
-                scrollToBottom()
-            }
-        })
     }
 
     private fun scrollToBottom() {
@@ -245,6 +237,13 @@ class MainActivity : AppCompatActivity(), AIListener {
                         // Sign in success, update UI with the signed-in user's information
                         Log.d(MainActivity::class.java.simpleName, "signInWithCredential:success")
                         Toast.makeText(this, "Login Success", Toast.LENGTH_LONG).show()
+                        FirebaseHandler().getConversationList(object : OnLoadCompleteListener {
+                            override fun onComplete(conversationList: List<ChatBubble>) {
+                                this@MainActivity.conversationList = conversationList.toMutableList()
+                                conversationListRecyclerView.swapAdapter(ConversationListAdapter(conversationList), true)
+                                scrollToBottom()
+                            }
+                        })
                     } else {
                         // If sign in fails, display a message to the user.
                         Log.w(MainActivity::class.java.simpleName, "signInWithCredential:failure", task.exception)
