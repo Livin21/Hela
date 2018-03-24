@@ -5,14 +5,13 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
-import java.util.*
 
 
 /***
  * Created by Livin Mathew <mail@livinmathew.me> on 23/3/18.
  */
 
-class ConversationListAdapter(private val conversationList: ArrayList<ChatBubble>): RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+class ConversationListAdapter(private val conversationList: List<ChatBubble>): RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     private val user = 0
     private val bot = 1

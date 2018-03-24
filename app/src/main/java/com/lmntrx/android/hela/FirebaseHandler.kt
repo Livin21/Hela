@@ -9,13 +9,13 @@ import java.util.*
  * Created by Livin Mathew <mail@livinmathew.me> on 24/3/18.
  */
 
-interface OnLoadCompleteListener{
-    fun onComplete(conversationList: ArrayList<ChatBubble>)
+interface OnLoadCompleteListener {
+    fun onComplete(conversationList: List<ChatBubble>)
 }
 
-class FirebaseHandler{
+class FirebaseHandler {
 
-    fun saveChat(conversationList: ArrayList<ChatBubble>){
+    fun saveChat(conversationList: MutableList<ChatBubble>) {
         conversationList.forEach {
             FirebaseFirestore.getInstance().collection("conversations").document(
                     FirebaseAuth.getInstance().currentUser!!.uid
@@ -23,18 +23,19 @@ class FirebaseHandler{
         }
     }
 
-    fun getConversationList(onLoadCompleteListener: OnLoadCompleteListener){
-        val conversationList: ArrayList<ChatBubble> = ArrayList()
+    fun getConversationList(onLoadCompleteListener: OnLoadCompleteListener) {
+        val conversationList: MutableList<ChatBubble> = ArrayList()
         FirebaseFirestore.getInstance().collection("conversations").document(
                 FirebaseAuth.getInstance().currentUser!!.uid
         ).collection("conversation").get().addOnCompleteListener {
-            if (it.isSuccessful){
+            if (it.isSuccessful) {
                 it.result.documents.forEach {
                     conversationList.add(
                             if (it["type"].toString() == "0") UserBubble(it["message"] as String) else BotBubble(it["message"] as String)
                     )
                 }
-                conversationList.reverse()
+                if (!conversationList.isEmpty())
+                    onLoadCompleteListener.onComplete(conversationList.sortedWith(compareBy { it.timestamp }))
                 onLoadCompleteListener.onComplete(conversationList)
             }
         }

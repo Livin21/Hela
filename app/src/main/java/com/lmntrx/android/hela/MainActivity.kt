@@ -7,13 +7,9 @@ import ai.api.android.AIService
 import ai.api.model.AIError
 import ai.api.model.AIRequest
 import ai.api.model.AIResponse
-import ai.api.model.Result
-
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
-import android.graphics.Bitmap
-import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.support.annotation.DrawableRes
 import android.support.v4.content.ContextCompat
@@ -41,7 +37,7 @@ import org.jetbrains.anko.uiThread
 
 class MainActivity : AppCompatActivity(), AIListener {
 
-    private lateinit var conversationList: ArrayList<ChatBubble>
+    private lateinit var conversationList: MutableList<ChatBubble>
 
     var mode = 0
 
@@ -59,7 +55,11 @@ class MainActivity : AppCompatActivity(), AIListener {
 
     override fun onResult(result: AIResponse?) {
         conversationList.add(UserBubble(result?.result?.resolvedQuery!!))
-        conversationList.add(BotBubble(result.result.fulfillment.speech))
+        val botResponse = result.result.fulfillment.speech
+        if (!botResponse.isNullOrEmpty())
+            conversationList.add(BotBubble(botResponse))
+        else
+            conversationList.add(BotBubble("Sorry. I am not programmed for that. :("))
         conversationListRecyclerView.swapAdapter(ConversationListAdapter(conversationList), true)
 
         mode = idleMode
@@ -139,7 +139,7 @@ class MainActivity : AppCompatActivity(), AIListener {
                 AIConfiguration.RecognitionEngine.System
         )
 
-        aiService = AIService.getService(this, config);
+        aiService = AIService.getService(this, config)
         aiService?.setListener(this)
 
         aiDataService = AIDataService(this, config)
@@ -154,7 +154,7 @@ class MainActivity : AppCompatActivity(), AIListener {
         conversationListRecyclerView.adapter = ConversationListAdapter(conversationList)
 
         FirebaseHandler().getConversationList(object : OnLoadCompleteListener {
-            override fun onComplete(conversationList: ArrayList<ChatBubble>) {
+            override fun onComplete(conversationList: List<ChatBubble>) {
                 conversationListRecyclerView.swapAdapter(ConversationListAdapter(conversationList), true)
             }
         })
@@ -174,7 +174,11 @@ class MainActivity : AppCompatActivity(), AIListener {
         doAsync {
             val response = aiDataService?.request(aiRequest)
             uiThread {
-                conversationList.add(BotBubble(response!!.result.fulfillment.speech))
+                val botResponse = response!!.result.fulfillment.speech
+                if (!botResponse.isNullOrEmpty())
+                    conversationList.add(BotBubble(botResponse))
+                else
+                    conversationList.add(BotBubble("Sorry. I am not programmed for that. :("))
                 conversationListRecyclerView.swapAdapter(ConversationListAdapter(conversationList), true)
             }
         }
