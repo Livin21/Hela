@@ -29,12 +29,16 @@ class FirebaseHandler {
             if (it.isSuccessful) {
                 it.result.documents.forEach {
                     conversationList.add(
-                            if (it["type"].toString() == "0") UserBubble(it["message"] as String) else BotBubble(it["message"] as String)
+                            if (it["type"].toString() == "0")
+                                UserBubble(it["message"] as String, (it["order"] as Long).toInt())
+                            else
+                                BotBubble(it["message"] as String, (it["order"] as Long).toInt())
                     )
                 }
                 if (!conversationList.isEmpty())
-                    onLoadCompleteListener.onComplete(conversationList.sortedWith(compareBy { it.timestamp }))
-                onLoadCompleteListener.onComplete(conversationList)
+                    onLoadCompleteListener.onComplete(conversationList.sortedWith(compareBy { it.order }))
+                else
+                    onLoadCompleteListener.onComplete(conversationList)
             }
         }
     }

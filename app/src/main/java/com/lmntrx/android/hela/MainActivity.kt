@@ -15,7 +15,6 @@ import android.support.annotation.DrawableRes
 import android.support.v4.content.ContextCompat
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
-import android.test.TouchUtils.scrollToBottom
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
@@ -56,13 +55,13 @@ class MainActivity : AppCompatActivity(), AIListener {
     private var aiRequest: AIRequest? = null
 
     override fun onResult(result: AIResponse?) {
-        conversationList.add(UserBubble(result?.result?.resolvedQuery!!))
+        conversationList.add(UserBubble(result?.result?.resolvedQuery!!, conversationList.size))
         FirebaseHandler().saveChat(conversationList)
         val botResponse = result.result.fulfillment.speech
         if (!botResponse.isNullOrEmpty())
-            conversationList.add(BotBubble(botResponse))
+            conversationList.add(BotBubble(botResponse, conversationList.size))
         else
-            conversationList.add(BotBubble("Sorry. I am not programmed for that. :("))
+            conversationList.add(BotBubble("Sorry. I am not programmed for that. :(", conversationList.size))
         conversationListRecyclerView.swapAdapter(ConversationListAdapter(conversationList), true)
         scrollToBottom()
 
@@ -176,7 +175,7 @@ class MainActivity : AppCompatActivity(), AIListener {
     }
 
     private fun sendMessage(message: String) {
-        conversationList.add(UserBubble(message.trim()))
+        conversationList.add(UserBubble(message.trim(), conversationList.size))
         conversationListRecyclerView.swapAdapter(ConversationListAdapter(conversationList), true)
         chatBox.setText("")
         mode = idleMode
@@ -189,9 +188,9 @@ class MainActivity : AppCompatActivity(), AIListener {
             uiThread {
                 val botResponse = response!!.result.fulfillment.speech
                 if (!botResponse.isNullOrEmpty())
-                    conversationList.add(BotBubble(botResponse))
+                    conversationList.add(BotBubble(botResponse, conversationList.size))
                 else
-                    conversationList.add(BotBubble("Sorry. I am not programmed for that. :("))
+                    conversationList.add(BotBubble("Sorry. I am not programmed for that. :(", conversationList.size))
                 conversationListRecyclerView.swapAdapter(ConversationListAdapter(conversationList), true)
                 scrollToBottom()
                 FirebaseHandler().saveChat(conversationList)
