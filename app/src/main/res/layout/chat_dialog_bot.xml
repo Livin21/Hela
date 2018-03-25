@@ -12,7 +12,7 @@
         android:layout_height="wrap_content"
         android:layout_margin="8dp"
         android:background="@drawable/chat_dialog_bot_background"
-        android:gravity="center"
+        android:gravity="start"
         android:textSize="13sp"
         android:text="Test"
         android:padding="10dp"
