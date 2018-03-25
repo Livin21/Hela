@@ -31,9 +31,7 @@ import com.google.android.gms.tasks.Task
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import kotlinx.android.synthetic.main.activity_main.*
-import org.jetbrains.anko.doAsync
-import org.jetbrains.anko.toast
-import org.jetbrains.anko.uiThread
+import org.jetbrains.anko.*
 
 
 class MainActivity : AppCompatActivity(), AIListener {
@@ -53,6 +51,9 @@ class MainActivity : AppCompatActivity(), AIListener {
     private var aiService: AIService? = null
     private var aiDataService: AIDataService? = null
     private var aiRequest: AIRequest? = null
+
+    private var user: User? = null
+    private var account: GoogleSignInAccount? = null
 
     override fun onResult(result: AIResponse?) {
         conversationList.add(UserBubble(result?.result?.resolvedQuery!!, conversationList.size))
@@ -215,7 +216,7 @@ class MainActivity : AppCompatActivity(), AIListener {
     private fun handleSignInResult(completedTask: Task<GoogleSignInAccount>) {
         try {
             val account = completedTask.getResult(ApiException::class.java)
-
+            this.account = account
             firebaseAuthWithGoogle(account)
         } catch (e: ApiException) {
             // The ApiException status code indicates the detailed failure reason.
@@ -240,6 +241,9 @@ class MainActivity : AppCompatActivity(), AIListener {
                         FirebaseHandler().getConversationList(object : OnLoadCompleteListener {
                             override fun onComplete(conversationList: List<ChatBubble>) {
                                 this@MainActivity.conversationList = conversationList.toMutableList()
+                                if (conversationList.isEmpty()){
+                                    initializeChat()
+                                }
                                 conversationListRecyclerView.swapAdapter(ConversationListAdapter(conversationList), true)
                                 scrollToBottom()
                             }
@@ -251,6 +255,33 @@ class MainActivity : AppCompatActivity(), AIListener {
                         Toast.makeText(this, "Login Failed", Toast.LENGTH_LONG).show()
                     }
                 }
+    }
+
+    private fun initializeChat() {
+        conversationList.add(
+                BotBubble("Hi, Welcome to HDFC Life Insurance!", 0)
+        )
+        FirebaseHandler().saveChat(conversationList)
+        conversationList.add(
+                BotBubble("I'm Hela, your personal Insurance Assistant.", 1)
+        )
+        FirebaseHandler().saveChat(conversationList)
+        conversationList.add(
+                BotBubble("Just a few details so that we take you to a plan that is just perfect for you.", 2)
+        )
+        FirebaseHandler().saveChat(conversationList)
+        conversationListRecyclerView.swapAdapter(ConversationListAdapter(conversationList), true)
+        scrollToBottom()
+        saveUserProfile()
+
+    }
+
+    private fun saveUserProfile() {
+        var tobaccoUser = 1
+        alert("Are you a tobacco user?") {
+            yesButton { tobaccoUser = 0 }
+            noButton { tobaccoUser = 1 }
+        }.show()
     }
 
     // Action Button animation
